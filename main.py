@@ -63,10 +63,10 @@ async def get_bots():
 async def create_bot(bot: BotModel = Body(...)):
     global views_per_task
     bot = jsonable_encoder(bot)
-    
+
     if bot["target_views"] < views_per_task:
         views_per_task = bot["target_views"]
-    
+
     total_tasks = math.ceil(bot["target_views"]/views_per_task)
     bot["total_tasks"] = total_tasks
     bot["start_time"] = datetime.now()
@@ -74,7 +74,7 @@ async def create_bot(bot: BotModel = Body(...)):
 
     for i in range(total_tasks):
         proxy_list = list(db["proxies"].find({"status": 1}))
-        proxy = proxy_list[i%len(proxy_list)]
+        proxy = proxy_list[i % len(proxy_list)]
 
         task = jsonable_encoder(
             TaskModel(
@@ -84,18 +84,24 @@ async def create_bot(bot: BotModel = Body(...)):
             )
         )
 
-        print("BOT -----> ", bot)
-        
         t = viewer.delay(created_bot.inserted_id, views_per_task, proxy,
-                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+                         bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
         task["_id"] = t.id
         db["tasks"].insert_one(task)
 
     result = {
         "success": True,
-        "message": "Successfully"
+        "message": "Successfully",
+        "bot_id": bot['_id']
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+
+
+@app.get("/bot/{bot_id}")
+def get_bot(bot_id):
+    bot = db["bots"].find_one({"_id": bot_id})
+    bots_json_data = json.dumps(bot, cls=DateTimeEncoder)
+    return JSONResponse(status_code=status.HTTP_200_OK, content=json.loads(bots_json_data))
 
 
 @app.delete("/bot/{bot_id}")
@@ -103,15 +109,15 @@ def delete_bot(bot_id):
     tasks = list(db["tasks"].find({"bot_id": bot_id}))
     for task in tasks:
         celery.control.revoke(task["_id"])
-    
+
     db["bots"].update_one(
-        { "_id": bot_id },
-        { "$set": 
+        {"_id": bot_id},
+        {"$set":
             {
                 "status": 4,
                 "finish_time": datetime.now()
             }
-        }
+         }
     )
 
     result = {
@@ -123,7 +129,7 @@ def delete_bot(bot_id):
 
 @app.get("/config/{key}", response_model=ConfigModel)
 async def get_config(key):
-    config = db["configs"].find_one({"key":key})
+    config = db["configs"].find_one({"key": key})
     config_json_data = json.dumps(config, cls=DateTimeEncoder)
     return JSONResponse(status_code=status.HTTP_200_OK, content=json.loads(config_json_data))
 
@@ -133,18 +139,18 @@ async def create_config(config: ConfigModel = Body(...)):
     config = jsonable_encoder(config)
     is_exist = db["configs"].find_one({"key": config["key"]})
     if is_exist == None:
-            config["created_at"] = datetime.now()
-            config["updated_at"] = datetime.now()
-            _ = db["configs"].insert_one(config)
+        config["created_at"] = datetime.now()
+        config["updated_at"] = datetime.now()
+        _ = db["configs"].insert_one(config)
     else:
         _ = db["configs"].update_one(
-            { "key": config["key"] },
-            { "$set": 
+            {"key": config["key"]},
+            {"$set":
                 {
                     "value": config["value"],
                     "updated_at": datetime.now()
                 }
-            }
+             }
         )
     result = {
         "success": True,
