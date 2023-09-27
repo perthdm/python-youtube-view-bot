@@ -78,12 +78,15 @@ def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, vi
     # task_id = str(self.request.id)
 
     # task_id = ObjectId()
+
+    task_id = ObjectId(task_id)
+
     bot = db["bots"].find_one({"_id": bot_id})
 
     setup_chrome_driver()
 
     db["tasks"].update_one(
-        {"_id": ObjectId(task_id)},
+        {"_id": task_id},
         {"$set":
             {
                 "status": 1,
@@ -128,7 +131,7 @@ def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, vi
         print('All tasks are done!')
 
         db["tasks"].update_one(
-            {"_id": ObjectId(task_id)},
+            {"_id": task_id},
             {"$set":
                 {
                     "status": 2,
