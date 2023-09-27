@@ -59,7 +59,7 @@ async def get_bots():
     return JSONResponse(status_code=status.HTTP_200_OK, content=json.loads(bots_json_data))
 
 
-@app.post("/bot", response_model=BotModel)
+@app.post("/bot")
 async def create_bot(bot: BotModel = Body(...)):
     global views_per_task
     bot = jsonable_encoder(bot)
