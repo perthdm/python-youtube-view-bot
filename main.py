@@ -85,17 +85,19 @@ async def create_bot(bot: BotModel = Body(...)):
             )
         )
 
-        t = viewer.delay(created_bot_id, views_per_task, proxy,
-                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
-        task["_id"] = t.id
-        db["tasks"].insert_one(task)
+        print("TASK -----> ", task)
 
-    result = {
-        "success": True,
-        "message": "Successfully",
-        "bot_id": created_bot_id
-    }
-    return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+    #     t = viewer.delay(created_bot_id, views_per_task, proxy,
+    #             bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+    #     task["_id"] = t.id
+    #     db["tasks"].insert_one(task)
+
+    # result = {
+    #     "success": True,
+    #     "message": "Successfully",
+    #     "bot_id": created_bot_id
+    # }
+    # return JSONResponse(status_code=status.HTTP_200_OK, content=result)
 
 
 @app.get("/bot/{bot_id}")
