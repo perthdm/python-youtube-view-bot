@@ -75,7 +75,8 @@ def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title
 
     print("SELF -----> ", self)
 
-    task_id = str(self.request.id)
+    # task_id = str(self.request.id)
+    task_id = ObjectId()
     bot = db["bots"].find_one({"_id":bot_id})
 
     setup_chrome_driver()
