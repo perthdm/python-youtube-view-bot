@@ -93,7 +93,7 @@ async def create_bot(bot: BotModel = Body(...)):
     result = {
         "success": True,
         "message": "Successfully",
-        "bot_id": bot['_id']
+        "bot_id": ""+bot['_id']
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=result)
 
