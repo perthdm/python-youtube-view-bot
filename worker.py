@@ -128,7 +128,7 @@ def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, vi
         print('All tasks are done!')
 
         db["tasks"].update_one(
-            {"_id": task_id},
+            {"_id": ObjectId(task_id)},
             {"$set":
                 {
                     "status": 2,
