@@ -77,8 +77,6 @@ async def create_bot(bot: BotModel = Body(...)):
         proxy_list = list(db["proxies"].find({"status": 1}))
         proxy = proxy_list[i % len(proxy_list)]
 
-        task_id = ObjectId()
-
         task = jsonable_encoder(
             TaskModel(
                 bot_id=created_bot_id,
@@ -87,9 +85,9 @@ async def create_bot(bot: BotModel = Body(...)):
             )
         )
 
-        t = viewer.delay(str(task_id), created_bot_id, views_per_task, proxy,
-                         bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
-        task["_id"] = task_id
+        t = viewer.delay(created_bot.inserted_id, views_per_task, proxy,
+                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+        task["_id"] = t.id
         db["tasks"].insert_one(task)
 
     result = {

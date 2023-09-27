@@ -70,17 +70,9 @@ db = client["youtube_viewer"]
 
 
 @celery.task(bind=True)
-def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
+def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
     global bot, max_threads, view, used_profiles
-
-    # print("SELF -----> ", self)
-
-    # task_id = str(self.request.id)
-
-    # task_id = ObjectId()
-
-    task_id = ObjectId(task_id)
-
+    task_id = self.request.id
     bot = db["bots"].find_one({"_id": bot_id})
 
     setup_chrome_driver()
