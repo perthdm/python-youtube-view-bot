@@ -71,7 +71,7 @@ async def create_bot(bot: BotModel = Body(...)):
     bot["total_tasks"] = total_tasks
     bot["start_time"] = datetime.now()
     created_bot = db["bots"].insert_one(bot)
-    created_bot_id = str(bot['_id'])
+    created_bot_id = str(created_bot.inserted_id)
 
     for i in range(total_tasks):
         proxy_list = list(db["proxies"].find({"status": 1}))
@@ -85,7 +85,7 @@ async def create_bot(bot: BotModel = Body(...)):
             )
         )
 
-        t = viewer.delay(created_bot.inserted_id, views_per_task, proxy,
+        t = viewer.delay(created_bot_id, views_per_task, proxy,
                          bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
         task["_id"] = t.id
         db["tasks"].insert_one(task)
