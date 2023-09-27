@@ -89,6 +89,7 @@ async def create_bot(bot: BotModel = Body(...)):
         task["_id"] = t.id
         db["tasks"].insert_one(task)
 
+    print(bot['_id'])
     result = {
         "success": True,
         "message": "Successfully",
