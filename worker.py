@@ -68,36 +68,36 @@ celery = Celery(
 client = pymongo.MongoClient(MONGODB_CONNECTION_URI)
 db = client["youtube_viewer"]
 
-    
+
 @celery.task(bind=True)
-def viewer(self,task_id, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
+def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
     global bot, max_threads, view, used_profiles
 
-    print("SELF -----> ", self)
+    # print("SELF -----> ", self)
 
     # task_id = str(self.request.id)
-    
+
     # task_id = ObjectId()
-    bot = db["bots"].find_one({"_id":bot_id})
+    bot = db["bots"].find_one({"_id": bot_id})
 
     setup_chrome_driver()
 
     db["tasks"].update_one(
-        {"_id": task_id},
-        { "$set": 
+        {"_id": ObjectId(task_id)},
+        {"$set":
             {
                 "status": 1,
             }
-        }
+         }
     )
 
     db["bots"].update_one(
         {"_id": bot_id},
-        { "$set": 
+        {"$set":
             {
                 "status": 1,
             }
-        }
+         }
     )
 
     if int(IS_DEBUG) == 0:
@@ -106,7 +106,7 @@ def viewer(self,task_id, bot_id, views_per_task, proxy, video_url, keywords, vid
         # if "There was an error handling your request" in res.text:
         #     db["tasks"].update_one(
         #         {"_id": task_id},
-        #         { "$set": 
+        #         { "$set":
         #             {
         #                 "status": 3,
         #                 "description": f"Bad Proxy | Proxy index: {proxy['index']} | {proxy['url']}:{proxy['port']} "
@@ -122,18 +122,18 @@ def viewer(self,task_id, bot_id, views_per_task, proxy, video_url, keywords, vid
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         proxy_link = f"{proxy['username']}:{proxy['password']}@{proxy['url']}:{proxy['port']}"
         futures = [executor.submit(view_video, bot_id, task_id, position, proxy_link, video_url, keywords, video_title, filter_by)
-                for position in range(views_per_task)]
+                   for position in range(views_per_task)]
 
         wait(futures)
         print('All tasks are done!')
 
         db["tasks"].update_one(
             {"_id": task_id},
-            { "$set": 
+            {"$set":
                 {
                     "status": 2,
                 }
-            }
+             }
         )
 
         update_bot_status(bot_id)
@@ -143,25 +143,25 @@ def viewer(self,task_id, bot_id, views_per_task, proxy, video_url, keywords, vid
 
 
 def update_bot_status(bot_id):
-    bot = db["bots"].find_one({"_id":bot_id})
+    bot = db["bots"].find_one({"_id": bot_id})
     completed_tasks = int(bot["completed_tasks"]) + 1
     db["bots"].update_one(
         {"_id": bot_id},
-        { "$set": 
+        {"$set":
             {
                 "completed_tasks": completed_tasks,
             }
-        }
+         }
     )
     if completed_tasks >= int(bot["total_tasks"]) or int(bot["target_viewed"]) >= int(bot["target_views"]):
         db["bots"].update_one(
             {"_id": bot_id},
-            { "$set": 
+            {"$set":
                 {
                     "status": 2,
                     "finish_time": datetime.now()
                 }
-            }
+             }
         )
 
 
@@ -173,16 +173,16 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
     email = None
 
     viewer = jsonable_encoder(
-            ViewerModel(
-                task_id=task_id,
-                position=position,
-                start_time=datetime.now(),
-                status=1
-            )
+        ViewerModel(
+            task_id=task_id,
+            position=position,
+            start_time=datetime.now(),
+            status=1
         )
+    )
 
     created_viewer = db["viewers"].insert_one(viewer)
-    
+
     try:
         header = Headers(
             browser="chrome",
@@ -192,21 +192,23 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
         agent = header['User-Agent']
 
         db["viewers"].update_one(
-            { "_id": created_viewer.inserted_id },
-            { "$set": 
+            {"_id": created_viewer.inserted_id},
+            {"$set":
                 {
                     "start_time": datetime.now()
                 }
-            }
+             }
         )
 
-        url, keyword, method, youtube = choose_method(position, video_url, keywords)
+        url, keyword, method, youtube = choose_method(
+            position, video_url, keywords)
 
         try:
             print(timestamp() + bcolors.OKBLUE + f"Worker {position} | " + bcolors.OKGREEN +
                   f"{proxy_link} | Good Proxy | Opening a new driver..." + bcolors.ENDC)
 
-            print("patched_drivers", f'chromedriver_{position%max_threads}{exe_name}')
+            print("patched_drivers",
+                  f'chromedriver_{position%max_threads}{exe_name}')
 
             patched_driver = os.path.join(
                 patched_drivers, f'chromedriver_{position%max_threads}{exe_name}')
@@ -220,13 +222,15 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
             sleep_time = int((str(position)[-1])) * factor
             sleep(sleep_time)
 
-            viewports = list(db["configs"].find_one({"key":"viewports"})["value"])
+            viewports = list(db["configs"].find_one(
+                {"key": "viewports"})["value"])
 
             profile = get_profile()
 
             # email = get_email()
 
-            driver = get_driver(False, viewports, agent, True, patched_driver, proxy_link, profile)
+            driver = get_driver(False, viewports, agent,
+                                True, patched_driver, proxy_link, profile)
 
             if not profile:
                 data_dir = driver.capabilities['chrome']['userDataDir']
@@ -257,12 +261,14 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
                 output = driver.title[:-10]
 
             if youtube == 'Video':
-                view_stat = youtube_normal(method, keyword, video_title, driver, output, filter_by)
+                view_stat = youtube_normal(
+                    method, keyword, video_title, driver, output, filter_by)
             else:
                 view_stat, output = youtube_music(driver)
 
             if 'watching' in view_stat:
-                youtube_live(proxy_link, position, driver, output, bot_id, task_id)
+                youtube_live(proxy_link, position, driver,
+                             output, bot_id, task_id)
 
             else:
                 current_url, current_channel = music_and_video(
@@ -282,13 +288,13 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
             status = quit_driver(driver=driver, data_dir=data_dir)
 
             db["viewers"].update_one(
-                { "_id": created_viewer.inserted_id },
-                { "$set": 
+                {"_id": created_viewer.inserted_id},
+                {"$set":
                     {
                         "finish_time": datetime.now(),
                         "status": 2
                     }
-                }
+                 }
             )
 
         except Exception as e:
@@ -299,17 +305,15 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
             print(timestamp() + bcolors.FAIL +
                   f"Worker {position} | Line : {e.__traceback__.tb_lineno} | {type(e).__name__} | {e.args[0] if e.args else ''}" + bcolors.ENDC)
 
-            
-
             db["viewers"].update_one(
-                { "_id": created_viewer.inserted_id },
-                { "$set": 
+                {"_id": created_viewer.inserted_id},
+                {"$set":
                     {
                         "finish_time": datetime.now(),
                         "status": 3,
                         "description": f"Line : {e.__traceback__.tb_lineno} | {type(e).__name__}"
                     }
-                }
+                 }
             )
 
     except RequestException:
@@ -317,30 +321,30 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
               bcolors.FAIL + f"{proxy_link} | Bad proxy " + bcolors.ENDC)
 
         db["viewers"].update_one(
-                { "_id": created_viewer.inserted_id },
-                { "$set": 
-                    {
-                        "finish_time": datetime.now(),
-                        "status": 3,
-                        "description": f"{proxy_link} | Bad proxy "
-                    }
-                }
-            )
+            {"_id": created_viewer.inserted_id},
+            {"$set":
+             {
+                 "finish_time": datetime.now(),
+                 "status": 3,
+                 "description": f"{proxy_link} | Bad proxy "
+             }
+             }
+        )
 
     except Exception as e:
         print(timestamp() + bcolors.FAIL +
               f"Worker {position} | Line : {e.__traceback__.tb_lineno} | {type(e).__name__} | {e.args[0] if e.args else ''}" + bcolors.ENDC)
 
         db["viewers"].update_one(
-                { "_id": created_viewer.inserted_id },
-                { "$set": 
-                    {
-                        "finish_time": datetime.now(),
-                        "status": 3,
-                        "description": f"Line : {e.__traceback__.tb_lineno} | {type(e).__name__}"
-                    }
-                }
-            )
+            {"_id": created_viewer.inserted_id},
+            {"$set":
+             {
+                 "finish_time": datetime.now(),
+                 "status": 3,
+                 "description": f"Line : {e.__traceback__.tb_lineno} | {type(e).__name__}"
+             }
+             }
+        )
 
 
 def choose_method(position, video_url, keywords):
@@ -387,7 +391,8 @@ def get_email():
 
 def get_profile():
     profile = None
-    profiles = os.listdir(r'C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data')
+    profiles = os.listdir(
+        r'C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data')
 
     i = 0
     while i < len(profiles):
@@ -443,7 +448,7 @@ def set_referer(position, url, method, driver):
     #     update_email_status(email=email, status=0)
     #     raise Exception("Email need identify by phone number.")
 
-    referers = list(db["configs"].find_one({"key":"referers"})["value"])
+    referers = list(db["configs"].find_one({"key": "referers"})["value"])
     referer = choice(referers)
     if referer:
         if method == 2 and 't.co/' in referer:
@@ -464,6 +469,7 @@ def set_referer(position, url, method, driver):
 
     else:
         driver.get(url)
+
 
 def youtube_normal(method, keyword, video_title, driver, output, filter_by):
     if method == 2:
@@ -646,18 +652,19 @@ def control_player(driver, output, position, proxy_link, youtube, viewer_id, col
     actual_duration = strftime(
         "%Hh:%Mm:%Ss", gmtime(video_len)).lstrip("0h:0m:")
     watching_video_len = video_len*uniform(bot["minimum"], bot["maximum"])
-    duration = strftime("%Hh:%Mm:%Ss", gmtime(watching_video_len)).lstrip("0h:0m:")
+    duration = strftime("%Hh:%Mm:%Ss", gmtime(
+        watching_video_len)).lstrip("0h:0m:")
 
     summary[position] = [position, output, f'{duration} / {actual_duration}']
 
     db["viewers"].update_one(
-        { "_id": viewer_id },
-        { "$set": 
+        {"_id": viewer_id},
+        {"$set":
             {
                 "video_duration": f'{video_len:.0f}',
                 "watching_duration": f'{watching_video_len:.0f}'
             }
-        }
+         }
     )
 
     print(timestamp() + bcolors.OKBLUE + f"Worker {position} | " + bcolors.OKGREEN +
@@ -718,22 +725,22 @@ def update_view_count(position, bot_id, task_id):
     bot = db["bots"].find_one({"_id": bot_id})
     bot_target_viewed = int(bot["target_viewed"]) + 1
     db["bots"].update_one(
-        { "_id": bot_id },
-        { "$set": 
+        {"_id": bot_id},
+        {"$set":
             {
                 "target_viewed": bot_target_viewed,
             }
-        }
+         }
     )
 
     task = db["tasks"].find_one({"_id": task_id})
     db["tasks"].update_one(
-        { "_id": task_id },
-        { "$set": 
+        {"_id": task_id},
+        {"$set":
             {
                 "viewed": int(task["viewed"]) + 1,
             }
-        }
+         }
     )
     if bot_target_viewed >= int(bot["target_views"]):
         tasks = list(db["tasks"].find({"bot_id": bot_id}))
@@ -758,13 +765,14 @@ def remove_used_profile(profile):
 
 def update_email_status(email, status):
     db["emails"].update_one(
-        { "username": email["username"] },
-        { "$set":
+        {"username": email["username"]},
+        {"$set":
             {
                 "status": status,
             }
-        }
+         }
     )
+
 
 def quit_driver(driver, data_dir):
     if driver:
@@ -781,4 +789,5 @@ def setup_chrome_driver():
     cwd = os.getcwd()
     patched_drivers = os.path.join(cwd, 'patched_drivers')
     osname, exe_name = download_driver(patched_drivers=patched_drivers)
-    copy_drivers(cwd=cwd, patched_drivers=patched_drivers, exe=exe_name, total=4)
+    copy_drivers(cwd=cwd, patched_drivers=patched_drivers,
+                 exe=exe_name, total=4)
