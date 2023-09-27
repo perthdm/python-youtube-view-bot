@@ -70,7 +70,7 @@ db = client["youtube_viewer"]
 
 
 @celery.task(bind=True)
-async def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
+def viewer(self, task_id, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
     global bot, max_threads, view, used_profiles
 
     # print("SELF -----> ", self)
