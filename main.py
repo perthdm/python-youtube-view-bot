@@ -77,6 +77,8 @@ async def create_bot(bot: BotModel = Body(...)):
         proxy_list = list(db["proxies"].find({"status": 1}))
         proxy = proxy_list[i % len(proxy_list)]
 
+        print("proxy -----> ", proxy)
+
         task = jsonable_encoder(
             TaskModel(
                 bot_id=created_bot_id,
