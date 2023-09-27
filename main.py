@@ -85,12 +85,12 @@ async def create_bot(bot: BotModel = Body(...)):
             )
         )
 
-        print("TASK -----> ", task)
+        # print("TASK -----> ", task)
 
-    #     t = viewer.delay(created_bot_id, views_per_task, proxy,
-    #             bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
-    #     task["_id"] = t.id
-    #     db["tasks"].insert_one(task)
+        t = viewer.delay(created_bot_id, views_per_task, proxy,
+                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+        task["_id"] = t.id
+        db["tasks"].insert_one(task)
 
     # result = {
     #     "success": True,
