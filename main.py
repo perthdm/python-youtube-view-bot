@@ -85,7 +85,7 @@ async def create_bot(bot: BotModel = Body(...)):
             )
         )
 
-        t = viewer.delay(created_bot.inserted_id, views_per_task, proxy,
+        t = viewer.delay(created_bot_id, views_per_task, proxy,
                 bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
         task["_id"] = t.id
         db["tasks"].insert_one(task)
