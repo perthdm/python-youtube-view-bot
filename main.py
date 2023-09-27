@@ -71,7 +71,7 @@ async def create_bot(bot: BotModel = Body(...)):
     bot["total_tasks"] = total_tasks
     bot["start_time"] = datetime.now()
     created_bot = db["bots"].insert_one(bot)
-    created_bot_id = str(created_bot.inserted_id)
+    created_bot_id = str(bot['_id'])
 
     for i in range(total_tasks):
         proxy_list = list(db["proxies"].find({"status": 1}))
@@ -94,7 +94,7 @@ async def create_bot(bot: BotModel = Body(...)):
     result = {
         "success": True,
         "message": "Successfully",
-        "bot_id": created_bot_id 
+        "bot_id": created_bot_id
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=result)
 
