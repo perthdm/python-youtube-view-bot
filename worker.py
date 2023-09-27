@@ -23,6 +23,7 @@ from src.basics import *
 from src.features import *
 
 from src.models.viewer import *
+from bson import ObjectId
 
 driver_dict = {}
 duration_dict = {}
@@ -77,7 +78,7 @@ def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title
     setup_chrome_driver()
 
     db["tasks"].update_one(
-        {"_id": task_id},
+        {"_id": ObjectId(task_id)},
         { "$set": 
             {
                 "status": 1,
