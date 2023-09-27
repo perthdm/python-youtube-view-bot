@@ -59,7 +59,7 @@ async def get_bots():
     return JSONResponse(status_code=status.HTTP_200_OK, content=json.loads(bots_json_data))
 
 
-@app.post("/bot")
+@app.post("/bot", response_model=BotModel)
 async def create_bot(bot: BotModel = Body(...)):
     global views_per_task
     bot = jsonable_encoder(bot)
@@ -77,8 +77,6 @@ async def create_bot(bot: BotModel = Body(...)):
         proxy_list = list(db["proxies"].find({"status": 1}))
         proxy = proxy_list[i % len(proxy_list)]
 
-        print("proxy -----> ", proxy)
-
         task = jsonable_encoder(
             TaskModel(
                 bot_id=created_bot_id,
@@ -92,7 +90,6 @@ async def create_bot(bot: BotModel = Body(...)):
         task["_id"] = t.id
         db["tasks"].insert_one(task)
 
-    print("BOT ID -----> ", created_bot_id)
     result = {
         "success": True,
         "message": "Successfully",
