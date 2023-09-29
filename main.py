@@ -92,12 +92,12 @@ async def create_bot(bot: BotModel = Body(...)):
         task["_id"] = t.id
         db["tasks"].insert_one(task)
 
-    # result = {
-    #     "success": True,
-    #     "message": "Successfully",
-    #     "bot_id": created_bot_id
-    # }
-    # return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+    result = {
+        "success": True,
+        "message": "Successfully",
+        "bot_id": created_bot_id
+    }
+    return JSONResponse(status_code=status.HTTP_200_OK, content=result)
 
 
 @app.get("/bot/{bot_id}")
