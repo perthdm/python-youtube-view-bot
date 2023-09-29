@@ -32,7 +32,7 @@ import undetected_chromedriver as uc
 
 load_dotenv()
 IS_DEBUG = os.environ.get("IS_DEBUG")
-
+PROFILE_PATH = os.environ.get("PROFILE_PATH")
 WEBRTC = os.path.join('extension', 'webrtc_control.zip')
 ACTIVE = os.path.join('extension', 'always_active.zip')
 FINGERPRINT = os.path.join('extension', 'fingerprint_defender.zip')
@@ -169,10 +169,8 @@ def get_driver(background, viewports, agent, auth_required, patched_driver, prox
     service = Service(executable_path=patched_driver)
 
     if profile:
-
-
-        profile_path = "C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data\\" + profile
-
+        profile_path = PROFILE_PATH + profile
+        print(profile_path)
         options.add_argument(f'--user-data-dir={profile_path}')
         options.add_argument(f'--profile-directory={profile}')
 

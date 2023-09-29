@@ -52,6 +52,7 @@ load_dotenv()
 RABBITMQ_URI = os.environ.get("RABBITMQ_URI")
 MONGODB_CONNECTION_URI = os.environ.get("MONGODB_CONNECTION_URI")
 IS_DEBUG = os.environ.get("IS_DEBUG")
+PROFILE_PATH = os.environ.get("PROFILE_PATH")
 
 celery = Celery(
     __name__,
@@ -386,8 +387,7 @@ def get_email():
 
 def get_profile():
     profile = None
-    profiles = os.listdir(
-        r'C:\\Users\\Administrator\\AppData\\Local\\Google\\Chrome\\User Data')
+    profiles = os.listdir(PROFILE_PATH)
 
     i = 0
     while i < len(profiles):
