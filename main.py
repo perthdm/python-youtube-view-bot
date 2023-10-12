@@ -284,17 +284,22 @@ def create_order(bot):
 
 
 @app.on_event("startup")
-@repeat_every(seconds=30, wait_first=True)
+@repeat_every(seconds=10, wait_first=True)
 def set_order_status():
     bots = list(db["bots"].find({"status": {"$ne": 0}}))
+    try:
+        for bot in bots:
+            url = os.environ.get("API_ENDPOINT")+"/watcher/set-bot-status"
+            payload = json.dumps(bot, cls=DateTimeEncoder)
+            headers = {
+                'Content-Type': 'application/json',
+                'bot-token': BOT_TOKEN
+            }
 
-    for bots in bots:
-        url = os.environ.get("API_ENDPOINT")+"/watcher/set-bot-status"
-        payload = bots
-        headers = {
-            'bot-token': BOT_TOKEN
-        }
-        response = requests.request("POST", url, headers=headers, data=payload)
+            response = requests.post(url, headers=headers, data=payload)
+
+    except Exception as e:
+        print("Error:", e)
 
 
 @app.on_event("startup")
@@ -302,10 +307,11 @@ def set_order_status():
 def bot_count():
     bots = list(db["bots"].find().sort("start_time", -1))
 
-    for bots in bots:
+    for bot in bots:
         url = os.environ.get("API_ENDPOINT")+"/watcher/bot-count"
-        payload = bots
+        payload = json.dumps(bot, cls=DateTimeEncoder)
         headers = {
+            'Content-Type': 'application/json',
             'bot-token': BOT_TOKEN
         }
 
