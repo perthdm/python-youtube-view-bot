@@ -3,6 +3,7 @@ from bson import ObjectId
 from datetime import datetime
 from src.py_object_id import *
 
+
 class BotModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
     video_title: str
@@ -10,7 +11,7 @@ class BotModel(BaseModel):
     video_url: str
     target_views: int
     target_viewed: int = 0
-    status: int = 0 # 0 = PENDING, 1 = RUNNING, 2 = SUCCESS, 3 = FAILED, 4 = CANCELED
+    status: int = 0  # 0 = PENDING, 1 = RUNNING, 2 = SUCCESS, 3 = FAILED, 4 = CANCELED
     minimum: float
     maximum: float
     filter: str = ''
@@ -19,6 +20,7 @@ class BotModel(BaseModel):
     save_bandwidth: bool = False
     start_time: datetime = Field(default=None)
     finish_time: datetime = Field(default=None)
+    watch_id: str = ''
 
     class Config:
         allow_population_by_field_name = True

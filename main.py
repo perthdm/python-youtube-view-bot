@@ -23,6 +23,8 @@ from src.models.config import *
 from src.models.proxy import *
 from src.models.email import *
 
+from fastapi_utils.tasks import repeat_every
+import requests
 
 app = FastAPI()
 
@@ -45,6 +47,8 @@ db = client["youtube_viewer"]
 
 
 views_per_task = 5
+
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
 
 @app.get("/")
@@ -88,7 +92,7 @@ async def create_bot(bot: BotModel = Body(...)):
         # print("TASK -----> ", task)
 
         t = viewer.delay(created_bot_id, views_per_task, proxy,
-                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+                         bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
         task["_id"] = t.id
         db["tasks"].insert_one(task)
 
@@ -213,3 +217,89 @@ def delete_email(email_id):
         "message": "Successfully"
     }
     return JSONResponse(status_code=status.HTTP_200_OK, content=result)
+
+
+@app.on_event("startup")
+@repeat_every(seconds=5, wait_first=True)
+def periodic():
+    print("Hello World.")
+    url = os.environ.get("API_ENDPOINT")+"/watcher/order"
+
+    payload = {}
+    headers = {'bot-token': BOT_TOKEN}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    if response.status_code == 200:
+        # print(response.text)
+        create_order(response.text)
+
+
+def create_order(bot):
+    global views_per_task
+    try:
+
+        bot_running = db["bots"].find_one(
+            {"$or": [{"status": 0}, {"status": 1}]})
+
+        if bot_running:
+            print("Running")
+        else:
+            bot = json.loads(bot)
+            if bot["target_views"] < views_per_task:
+                views_per_task = bot["target_views"]
+
+            total_tasks = math.ceil(bot["target_views"]/views_per_task)
+            bot["total_tasks"] = total_tasks
+            bot["start_time"] = datetime.now()
+
+            created_bot = db["bots"].insert_one(bot)
+            created_bot_id = str(created_bot.inserted_id)
+
+            for i in range(total_tasks):
+                proxy_list = list(db["proxies"].find({"status": 1}))
+                proxy = proxy_list[i % len(proxy_list)]
+
+                task = jsonable_encoder(
+                    TaskModel(
+                        bot_id=created_bot_id,
+                        proxy=proxy,
+                        views=views_per_task,
+                    )
+                )
+
+                t = viewer.delay(created_bot_id, views_per_task, proxy,
+                                 bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+                task["_id"] = t.id
+                db["tasks"].insert_one(task)
+    except Exception as e:
+        print("Error:", e)
+
+
+@app.on_event("startup")
+@repeat_every(seconds=30, wait_first=True)
+def set_order_status():
+    bots = list(db["bots"].find({"status": {"$ne": 0}}))
+
+    for bots in bots:
+        url = os.environ.get("API_ENDPOINT")+"/watcher/set-bot-status"
+        payload = bots
+        headers = {
+            'bot-token': BOT_TOKEN
+        }
+        response = requests.request("POST", url, headers=headers, data=payload)
+
+
+@app.on_event("startup")
+@repeat_every(seconds=5, wait_first=True)
+def bot_count():
+    bots = list(db["bots"].find().sort("start_time", -1))
+
+    for bots in bots:
+        url = os.environ.get("API_ENDPOINT")+"/watcher/bot-count"
+        payload = bots
+        headers = {
+            'bot-token': BOT_TOKEN
+        }
+
+        response = requests.request("POST", url, headers=headers, data=payload)
