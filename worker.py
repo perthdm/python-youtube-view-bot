@@ -143,7 +143,6 @@ def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title
 
 def update_bot_status(bot_id):
     bot = db["bots"].find_one({"_id": bot_id})
-    print("update bot status ------> ", bot)
     completed_tasks = int(bot["completed_tasks"]) + 1
     db["bots"].update_one(
         {"_id": bot_id},

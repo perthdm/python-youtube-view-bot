@@ -248,9 +248,11 @@ def create_order(bot):
             bot = json.loads(bot)
             # bot: BotModel = bot
 
-            print("BOT -----> ", bot)
-
             bot['status'] = 0
+            bot['completed_tasks'] = 0
+            bot['total_tasks'] = 0
+            bot['target_viewed'] = 0
+
             if bot["target_views"] < views_per_task:
                 views_per_task = bot["target_views"]
 
