@@ -74,6 +74,9 @@ db = client["youtube_viewer"]
 def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title, filter_by):
     global bot, max_threads, view, used_profiles
     task_id = self.request.id
+
+    bot_id = ObjectId(bot_id)
+
     bot = db["bots"].find_one({"_id": bot_id})
 
     setup_chrome_driver()
