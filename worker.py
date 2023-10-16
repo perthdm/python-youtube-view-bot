@@ -5,6 +5,7 @@ import requests
 import re
 import pymongo
 import ssl
+import random
 from datetime import datetime
 from fake_headers import Headers, browsers
 from celery import Celery
@@ -440,11 +441,22 @@ def spoof_geolocation(proxy_link, driver):
 
 
 def set_referer(position, url, method, driver):
-    # msg = login_email(driver, email["username"], email["password"])
-    # print("msg", msg)
-    # if msg == "failed":
-    #     update_email_status(email=email, status=0)
-    #     raise Exception("Email need identify by phone number.")
+    ref_list = list(db["configs"]).find_one({"key": "referers"}["value"])
+    ref_target = choice(ref_list)
+
+    driver.get(ref_target)
+
+    # Finds all elements in the page
+    elements = driver.find_elements_by_xpath('//*[@id]')
+
+    # Selects a random element from the list of elements
+    element = random.choice(elements) 
+
+    element.click()
+
+    # Sleep
+    duration = random.randint(10, 30)
+    driver.implicitly_wait(duration)
 
     referers = list(db["configs"].find_one({"key": "referers"})["value"])
     referer = choice(referers)
