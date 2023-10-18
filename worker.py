@@ -25,6 +25,7 @@ from src.features import *
 
 from src.models.viewer import *
 from bson import ObjectId
+import json
 
 driver_dict = {}
 duration_dict = {}
@@ -102,22 +103,7 @@ def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title
 
     if int(IS_DEBUG) == 0:
         res = change_ip(proxy["index"], proxy["url"])
-        # print("change ip response:", res.text)
-        # if "There was an error handling your request" in res.text:
-        #     db["tasks"].update_one(
-        #         {"_id": task_id},
-        #         { "$set":
-        #             {
-        #                 "status": 3,
-        #                 "description": f"Bad Proxy | Proxy index: {proxy['index']} | {proxy['url']}:{proxy['port']} "
-        #             }
-        #         }
-        #     )
-
-        #     update_bot_status(bot_id)
-
-        #     return "Failed"
-        # sleep(15)
+        sleep(20)
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
         proxy_link = f"{proxy['username']}:{proxy['password']}@{proxy['url']}:{proxy['port']}"
@@ -404,17 +390,19 @@ def get_profile():
     return profile
 
 
-def change_ip(index, url):
-    return True
-    # res = requests.get(f"http://{url}/api/change_ip",
-    #         headers={
-    #             "Authorization":"Token 7e900b9e6e0d93df5fc975009937d0f1f92d5658"
-    #         },
-    #         params={
-    #             "index": index,
-    #         }
-    #     )
-    # return res
+def change_ip(url, port):
+    payload = json.dumps({
+        "url": url,
+        "port": port
+    })
+    headers = {
+        'Content-Type': 'application/json'
+    }
+
+    response = requests.post(
+        f"http://{url}:3001/device/youtube-bot-rotate", headers=headers, data=payload)
+
+    return response
 
 
 def spoof_geolocation(proxy_link, driver):
@@ -450,7 +438,7 @@ def set_referer(position, url, method, driver):
     elements = driver.find_elements_by_xpath('//*[@id]')
 
     # Selects a random element from the list of elements
-    element = random.choice(elements) 
+    element = random.choice(elements)
 
     element.click()
 
