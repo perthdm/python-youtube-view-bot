@@ -1,8 +1,7 @@
 """
 MIT License
 
-Copyright (c) 2021-2022 MShawon
-
+Copyright (c) 2023 iDev
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
@@ -137,7 +136,7 @@ def wait_for_new_page(driver, previous_url=False, previous_title=False):
                 break
 
 
-def play_next_video(driver, suggested):
+def go_next_video(driver, suggested):
     shuffle(suggested)
     video_id = choice(suggested)
 

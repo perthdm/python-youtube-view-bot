@@ -41,15 +41,12 @@ app.add_middleware(
 )
 
 load_dotenv()
+BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGODB_CONNECTION_URI = os.environ.get("MONGODB_CONNECTION_URI")
+
 client = pymongo.MongoClient(MONGODB_CONNECTION_URI)
 db = client["youtube_viewer"]
-
-
 views_per_task = 5
-
-BOT_TOKEN = os.environ.get("BOT_TOKEN")
-
 
 @app.get("/")
 def hello_world():

@@ -572,7 +572,7 @@ def music_and_video(proxy_link, position, youtube, driver, output, view_stat, vi
                   f"Worker {position} | Suggested video loop : {i}" + bcolors.ENDC)
 
             try:
-                output = play_next_video(driver, suggested)
+                output = go_next_video(driver, suggested)
             except WebDriverException as e:
                 raise Exception(
                     f"Error suggested | {type(e).__name__} | {e.args[0] if e.args else ''}")
