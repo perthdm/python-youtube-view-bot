@@ -102,7 +102,7 @@ def viewer(self, bot_id, views_per_task, proxy, video_url, keywords, video_title
     )
 
     if int(IS_DEBUG) == 0:
-        res = change_ip(proxy["index"], proxy["url"])
+        res = change_ip(proxy["url"], proxy["port"])
         sleep(20)
 
     with ThreadPoolExecutor(max_workers=max_threads) as executor:
