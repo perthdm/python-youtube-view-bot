@@ -392,7 +392,7 @@ def get_profile():
 
 def change_ip(url, port):
     payload = json.dumps({
-        "url": url,
+        "ip": url,
         "port": port
     })
     headers = {
