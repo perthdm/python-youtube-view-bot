@@ -241,46 +241,46 @@ def create_order(bot):
     global views_per_task
     try:
 
-        bot_running = db["bots"].find_one(
-            {"$or": [{"status": 0}, {"status": 1}]})
+        # bot_running = db["bots"].find_one(
+        #     {"$or": [{"status": 0}, {"status": 1}]})
 
-        if bot_running:
-            print("Running")
-        else:
-            bot = json.loads(bot)
-            # bot: BotModel = bot
+        # if bot_running:
+        #     print("Running")
+        # else:
+        bot = json.loads(bot)
+        # bot: BotModel = bot
 
-            bot['status'] = 0
-            bot['completed_tasks'] = 0
-            bot['total_tasks'] = 0
-            bot['target_viewed'] = 0
+        bot['status'] = 0
+        bot['completed_tasks'] = 0
+        bot['total_tasks'] = 0
+        bot['target_viewed'] = 0
 
-            if bot["target_views"] < views_per_task:
-                views_per_task = bot["target_views"]
+        if bot["target_views"] < views_per_task:
+            views_per_task = bot["target_views"]
 
-            total_tasks = math.ceil(bot["target_views"]/views_per_task)
-            bot["total_tasks"] = total_tasks
-            bot["start_time"] = datetime.now()
+        total_tasks = math.ceil(bot["target_views"]/views_per_task)
+        bot["total_tasks"] = total_tasks
+        bot["start_time"] = datetime.now()
 
-            created_bot = db["bots"].insert_one(bot)
-            created_bot_id = str(created_bot.inserted_id)
+        created_bot = db["bots"].insert_one(bot)
+        created_bot_id = str(created_bot.inserted_id)
 
-            for i in range(total_tasks):
-                proxy_list = list(db["proxies"].find({"status": 1}))
-                proxy = proxy_list[i % len(proxy_list)]
+        for i in range(total_tasks):
+            proxy_list = list(db["proxies"].find({"status": 1}))
+            proxy = proxy_list[i % len(proxy_list)]
 
-                task = jsonable_encoder(
-                    TaskModel(
-                        bot_id=created_bot_id,
-                        proxy=proxy,
-                        views=views_per_task,
-                    )
+            task = jsonable_encoder(
+                TaskModel(
+                    bot_id=created_bot_id,
+                    proxy=proxy,
+                    views=views_per_task,
                 )
+            )
 
-                t = viewer.delay(created_bot_id, views_per_task, proxy,
-                                 bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
-                task["_id"] = t.id
-                db["tasks"].insert_one(task)
+            t = viewer.delay(created_bot_id, views_per_task, proxy,
+                                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+            task["_id"] = t.id
+            db["tasks"].insert_one(task)
     except Exception as e:
         print("Error:", e)
 
