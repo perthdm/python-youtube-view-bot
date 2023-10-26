@@ -2,6 +2,7 @@ import os
 import pymongo
 import math
 import json
+import dns.resolver
 
 from fastapi import FastAPI, Body, HTTPException, status, Request
 from fastapi.responses import JSONResponse
@@ -44,9 +45,13 @@ load_dotenv()
 BOT_TOKEN = os.environ.get("BOT_TOKEN")
 MONGODB_CONNECTION_URI = os.environ.get("MONGODB_CONNECTION_URI")
 
+dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers = ['8.8.8.8']
+
 client = pymongo.MongoClient(MONGODB_CONNECTION_URI)
 db = client["youtube_viewer"]
 views_per_task = 5
+
 
 @app.get("/")
 def hello_world():

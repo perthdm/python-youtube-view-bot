@@ -6,6 +6,7 @@ import re
 import pymongo
 import ssl
 import random
+import dns.resolver
 from datetime import datetime
 from fake_headers import Headers, browsers
 from celery import Celery
@@ -67,6 +68,9 @@ celery = Celery(
         'cert_reqs': ssl.CERT_NONE  # Ignore certificate verification
     }
 )
+
+dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
+dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 
 client = pymongo.MongoClient(MONGODB_CONNECTION_URI)
 db = client["youtube_viewer"]
