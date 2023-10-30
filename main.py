@@ -3,6 +3,9 @@ import pymongo
 import math
 import json
 import dns.resolver
+import certifi
+
+ca = certifi.where()
 
 from fastapi import FastAPI, Body, HTTPException, status, Request
 from fastapi.responses import JSONResponse
@@ -48,7 +51,7 @@ MONGODB_CONNECTION_URI = os.environ.get("MONGODB_CONNECTION_URI")
 dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
 dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 
-client = pymongo.MongoClient(MONGODB_CONNECTION_URI)
+client = pymongo.MongoClient(MONGODB_CONNECTION_URI, tlsCAFile=ca)
 db = client["youtube_viewer"]
 views_per_task = 5
 

@@ -7,6 +7,10 @@ import pymongo
 import ssl
 import random
 import dns.resolver
+
+import certifi
+ca = certifi.where()
+
 from datetime import datetime
 from fake_headers import Headers, browsers
 from celery import Celery
@@ -72,7 +76,7 @@ celery = Celery(
 dns.resolver.default_resolver = dns.resolver.Resolver(configure=False)
 dns.resolver.default_resolver.nameservers = ['8.8.8.8']
 
-client = pymongo.MongoClient(MONGODB_CONNECTION_URI)
+client = pymongo.MongoClient(MONGODB_CONNECTION_URI, tlsCAFile=ca)
 db = client["youtube_viewer"]
 
 
