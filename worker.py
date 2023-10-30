@@ -439,23 +439,6 @@ def spoof_geolocation(proxy_link, driver):
 
 
 def set_referer(position, url, method, driver):
-    ref_list = list(db["configs"]).find_one({"key": "referers"}["value"])
-    ref_target = choice(ref_list)
-
-    driver.get(ref_target)
-
-    # Finds all elements in the page
-    elements = driver.find_elements_by_xpath('//*[@id]')
-
-    # Selects a random element from the list of elements
-    element = random.choice(elements)
-
-    element.click()
-
-    # Sleep
-    duration = random.randint(10, 30)
-    driver.implicitly_wait(duration)
-
     referers = list(db["configs"].find_one({"key": "referers"})["value"])
     referer = choice(referers)
     if referer:

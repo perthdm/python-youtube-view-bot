@@ -171,9 +171,10 @@ def get_driver(background, viewports, agent, auth_required, patched_driver, prox
         print(profile_path)
         options.add_argument(f'--user-data-dir={profile_path}')
         options.add_argument(f'--profile-directory={profile}')
-
+        
         # driver = uc.Chrome(options=options, user_data_dir=profile_path)
         driver = uc.Chrome(options=options)
+        
     else:
         print("2 :: NOT HAVE PROFILE")
         service = Service(executable_path=patched_driver)
