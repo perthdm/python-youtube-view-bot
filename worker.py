@@ -222,7 +222,9 @@ def view_video(bot_id, task_id, position, proxy_link, video_url, keywords, video
             profile = get_profile()
 
             # email = get_email()
-
+            print("---------------")
+            print(patched_driver)
+            print("---------------")
             driver = get_driver(False, viewports, agent,
                                 True, patched_driver, proxy_link, profile)
 

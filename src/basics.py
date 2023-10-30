@@ -165,10 +165,9 @@ def get_driver(background, viewports, agent, auth_required, patched_driver, prox
         else:
             options.add_argument(f'--proxy-server={proxy_link}')
 
-    service = Service(executable_path=patched_driver)
-
     if profile:
         profile_path = PROFILE_PATH + profile
+        print("1 :: HAVE A PROFILE")
         print(profile_path)
         options.add_argument(f'--user-data-dir={profile_path}')
         options.add_argument(f'--profile-directory={profile}')
@@ -176,7 +175,7 @@ def get_driver(background, viewports, agent, auth_required, patched_driver, prox
         # driver = uc.Chrome(options=options, user_data_dir=profile_path)
         driver = uc.Chrome(options=options)
     else:
-        
+        print("2 :: NOT HAVE PROFILE")
         service = Service(executable_path=patched_driver)
         driver = webdriver.Chrome(options=options, service=service)
     

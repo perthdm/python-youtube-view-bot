@@ -56,13 +56,9 @@ def download_driver(patched_drivers):
                     except Exception:
                         pass
 
+        print("version ------------> ", version)
         if not version or float(version.split('.')[0]) >= 115:
-            version = "114"
-
-            # print(bcolors.WARNING +
-            #       "Couldn't find your Google Chrome version automatically!" + bcolors.ENDC)
-            # version = input(bcolors.WARNING +
-            #                 'Please input your google chrome version (ex: 91.0.4472.114) : ' + bcolors.ENDC)
+           version = "114"
     else:
         input('{} OS is not supported.'.format(osname))
         sys.exit()
