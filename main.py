@@ -262,9 +262,9 @@ def create_order(bot):
         bot["total_tasks"] = total_tasks
         bot["start_time"] = datetime.now()
 
-        have_bot = db["bots"].find_one({"watch_id": bot["watch_id"]})
+        have_bot = db["bots"].count_documents({"watch_id": bot["watch_id"]})
 
-        if len(have_bot) <= 0:
+        if have_bot <= 0:
             created_bot = db["bots"].insert_one(bot)
             created_bot_id = str(created_bot.inserted_id)
 
