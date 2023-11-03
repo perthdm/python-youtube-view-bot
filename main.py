@@ -1,3 +1,22 @@
+import requests
+from fastapi_utils.tasks import repeat_every
+from src.models.email import *
+from src.models.proxy import *
+from src.models.config import *
+from src.models.bot import *
+from src.models.viewer import *
+from src.models.task import *
+from src.datetime import *
+from src.load_files import *
+from datetime import datetime
+from dotenv import load_dotenv
+from worker import viewer, celery
+from typing import Optional, List
+from random import randint, choice
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import JSONResponse
+from fastapi import FastAPI, Body, HTTPException, status, Request
 import os
 import pymongo
 import math
@@ -7,28 +26,6 @@ import certifi
 
 ca = certifi.where()
 
-from fastapi import FastAPI, Body, HTTPException, status, Request
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-from fastapi.middleware.cors import CORSMiddleware
-from random import randint, choice
-from typing import Optional, List
-from worker import viewer, celery
-from dotenv import load_dotenv
-from datetime import datetime
-
-from src.load_files import *
-from src.datetime import *
-
-from src.models.task import *
-from src.models.viewer import *
-from src.models.bot import *
-from src.models.config import *
-from src.models.proxy import *
-from src.models.email import *
-
-from fastapi_utils.tasks import repeat_every
-import requests
 
 app = FastAPI()
 
@@ -265,25 +262,28 @@ def create_order(bot):
         bot["total_tasks"] = total_tasks
         bot["start_time"] = datetime.now()
 
-        created_bot = db["bots"].insert_one(bot)
-        created_bot_id = str(created_bot.inserted_id)
+        have_bot = db["bots"].find_on({"watch_id": bot["watch_id"]})
 
-        for i in range(total_tasks):
-            proxy_list = list(db["proxies"].find({"status": 1}))
-            proxy = proxy_list[i % len(proxy_list)]
+        if have_bot <= 0:
+            created_bot = db["bots"].insert_one(bot)
+            created_bot_id = str(created_bot.inserted_id)
 
-            task = jsonable_encoder(
-                TaskModel(
-                    bot_id=created_bot_id,
-                    proxy=proxy,
-                    views=views_per_task,
+            for i in range(total_tasks):
+                proxy_list = list(db["proxies"].find({"status": 1}))
+                proxy = proxy_list[i % len(proxy_list)]
+
+                task = jsonable_encoder(
+                    TaskModel(
+                        bot_id=created_bot_id,
+                        proxy=proxy,
+                        views=views_per_task,
+                    )
                 )
-            )
 
-            t = viewer.delay(created_bot_id, views_per_task, proxy,
-                                bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
-            task["_id"] = t.id
-            db["tasks"].insert_one(task)
+                t = viewer.delay(created_bot_id, views_per_task, proxy,
+                                 bot["video_url"], bot["keywords"], bot["video_title"], bot["filter"])
+                task["_id"] = t.id
+                db["tasks"].insert_one(task)
     except Exception as e:
         print("Error:", e)
 
