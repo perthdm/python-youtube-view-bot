@@ -264,7 +264,7 @@ def create_order(bot):
 
         have_bot = db["bots"].find_one({"watch_id": bot["watch_id"]})
 
-        if have_bot <= 0:
+        if len(have_bot) <= 0:
             created_bot = db["bots"].insert_one(bot)
             created_bot_id = str(created_bot.inserted_id)
 
