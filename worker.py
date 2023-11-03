@@ -25,6 +25,7 @@ import pymongo
 import ssl
 import random
 import dns.resolver
+from random import choice
 
 import certifi
 ca = certifi.where()
@@ -437,23 +438,19 @@ def spoof_geolocation(proxy_link, driver):
 
 
 def set_referer(position, url, method, driver):
-    # referers = list(db["configs"].find_one({"key": "referers"})["value"])
-
-    url = os.environ.get("API_ENDPOINT")+"/system-config/bot/referer"
+    api_url = os.environ.get("API_ENDPOINT") + "/system-config/bot/referer"
     BOT_TOKEN = os.environ.get("BOT_TOKEN")
 
-    payload = {}
     headers = {'bot-token': BOT_TOKEN}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
+    response = requests.get(api_url, headers=headers)
 
     if response.status_code == 200:
-
-        data = response.text
-        referers = json.loads(data)
-        referer = choice(referers['value'])
-
-        if referer:
+        data = response.json()
+        referers = data.get('value')
+        
+        if referers:
+            referer = choice(referers)
             if method == 2 and 't.co/' in referer:
                 driver.get(url)
             else:
@@ -469,9 +466,10 @@ def set_referer(position, url, method, driver):
 
             print(timestamp() + bcolors.OKBLUE +
                   f"Worker {position} | Referer used : {referer}" + bcolors.ENDC)
-
         else:
             driver.get(url)
+    else:
+        print("Failed to fetch referer from the API. Status code:", response.status_code)
 
 
 def youtube_normal(method, keyword, video_title, driver, output, filter_by):
@@ -654,7 +652,7 @@ def control_player(driver, output, position, proxy_link, youtube, viewer_id, col
 
     actual_duration = strftime(
         "%Hh:%Mm:%Ss", gmtime(video_len)).lstrip("0h:0m:")
-    watching_video_len = video_len*uniform(bot["minimum"], bot["maximum"])
+    watching_video_len = video_len*unsiform(bot["minimum"], bot["maximum"])
     duration = strftime("%Hh:%Mm:%Ss", gmtime(
         watching_video_len)).lstrip("0h:0m:")
 
