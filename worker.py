@@ -1,3 +1,21 @@
+import json
+from bson import ObjectId
+from src.models.viewer import *
+from src.features import *
+from src.basics import *
+from src.download_driver import *
+from src.load_files import *
+from src.colors import *
+from fastapi.encoders import jsonable_encoder
+from dotenv import load_dotenv
+from undetected_chromedriver.patcher import Patcher
+from requests.exceptions import RequestException
+from random import choice, randint
+from time import gmtime, sleep, strftime, time
+from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
+from celery import Celery
+from fake_headers import Headers, browsers
+from datetime import datetime
 import shutil
 import subprocess
 import psutil
@@ -11,26 +29,6 @@ import dns.resolver
 import certifi
 ca = certifi.where()
 
-from datetime import datetime
-from fake_headers import Headers, browsers
-from celery import Celery
-from concurrent.futures import ThreadPoolExecutor, wait, ALL_COMPLETED
-from time import gmtime, sleep, strftime, time
-from random import choice, randint
-from requests.exceptions import RequestException
-from undetected_chromedriver.patcher import Patcher
-from dotenv import load_dotenv
-from fastapi.encoders import jsonable_encoder
-
-from src.colors import *
-from src.load_files import *
-from src.download_driver import *
-from src.basics import *
-from src.features import *
-
-from src.models.viewer import *
-from bson import ObjectId
-import json
 
 driver_dict = {}
 duration_dict = {}
@@ -439,27 +437,41 @@ def spoof_geolocation(proxy_link, driver):
 
 
 def set_referer(position, url, method, driver):
-    referers = list(db["configs"].find_one({"key": "referers"})["value"])
-    referer = choice(referers)
-    if referer:
-        if method == 2 and 't.co/' in referer:
-            driver.get(url)
-        else:
-            if 'search.yahoo.com' in referer:
-                driver.get('https://duckduckgo.com/')
-                driver.execute_script(
-                    "window.history.pushState('page2', 'Title', arguments[0]);", referer)
+    # referers = list(db["configs"].find_one({"key": "referers"})["value"])
+
+    url = os.environ.get("API_ENDPOINT")+"/system-config/bot/referer"
+    BOT_TOKEN = os.environ.get("BOT_TOKEN")
+
+    payload = {}
+    headers = {'bot-token': BOT_TOKEN}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    if response.status_code == 200:
+
+        data = response.text
+        referers = json.loads(data)
+        referer = choice(referers['value'])
+
+        if referer:
+            if method == 2 and 't.co/' in referer:
+                driver.get(url)
             else:
-                driver.get(referer)
+                if 'search.yahoo.com' in referer:
+                    driver.get('https://duckduckgo.com/')
+                    driver.execute_script(
+                        "window.history.pushState('page2', 'Title', arguments[0]);", referer)
+                else:
+                    driver.get(referer)
 
-            driver.execute_script(
-                "window.location.href = '{}';".format(url))
+                driver.execute_script(
+                    "window.location.href = '{}';".format(url))
 
-        print(timestamp() + bcolors.OKBLUE +
-              f"Worker {position} | Referer used : {referer}" + bcolors.ENDC)
+            print(timestamp() + bcolors.OKBLUE +
+                  f"Worker {position} | Referer used : {referer}" + bcolors.ENDC)
 
-    else:
-        driver.get(url)
+        else:
+            driver.get(url)
 
 
 def youtube_normal(method, keyword, video_title, driver, output, filter_by):
